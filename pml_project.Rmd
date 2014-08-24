@@ -1,0 +1,23 @@
+
+Practical Machine Learning: Prediction Project 
+=======================================================================
+---
+title: "pml_project"
+author: "leo9r"
+date: "August 24, 2014"
+output: html_document
+---
+
+
+
+
+## 1. Data Processing
+
+### 1.1 Loading Libraries
+
+
+
+
+
+
+
