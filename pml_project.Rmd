@@ -74,6 +74,7 @@ inTrain <- createDataPartition(y = trainD$classe, p = 0.7, list = FALSE)
 training <- trainD[inTrain, ]
 validation <- trainD[-inTrain, ]
 ```
+
 ### 3.2 Training the model
 The Random Forest method has been selected, which is able to work with a very large number of predictors, even when there are more predictors than observations.
 ```{r, echo = TRUE, cache=TRUE}
@@ -81,8 +82,29 @@ set.seed(4321)
 model <- randomForest(classe ~ ., data = training)
 model
 ```
+
 ### 3.3 Analysing Variable Importance
 ```{r, echo = TRUE, cache=TRUE}
-varImpPlot(model)
+varImpPlot(model, n.var = 15, main = 'The 15 most important variables')
 ```
+
+### 3.4 Running the model on the Validation Set
+```{r, echo = TRUE, cache=TRUE}
+pred <- predict(model, newdata = validation)
+confusionMatrix(pred, validation$classe)
+```
+
+### 3.5 Expected out of sample error
+```{r, echo = TRUE, cache=TRUE}
+acc <- confusionMatrix(pred, validation$classe)$overall['Accuracy']
+acc
+```
+The out of the sample error is: **`r (1 - acc)*100`%**
+
+## 4 Predicting the outcome on the test set
+```{r, echo = TRUE, cache=TRUE}
+predict(model, testD)
+```
+
+
 
