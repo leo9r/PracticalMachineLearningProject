@@ -1,23 +1,88 @@
 
-Practical Machine Learning: Prediction Project 
-=======================================================================
 ---
-title: "pml_project"
+title: "Practical Machine Learning: Prediction Project"
 author: "leo9r"
 date: "August 24, 2014"
 output: html_document
 ---
 
+## 1. Summary
+This project follow machine learning steps on the Weight Lifting Exercise Dataset in order to predict the manner in which the exercise was made (i.e. the "classe" variable). The presented approach is based on the Random Forest technique.
 
+## 2 Loading Libraries
+```{r, echo = FALSE, message=FALSE, cache=TRUE}
+setwd("/Users/Leo/Documents/leopass/DocsLeo/5Coursera/predmachlearn_004/RmdProject")
+```
 
+```{r, echo = TRUE, message=FALSE }
+require(caret)
+require(randomForest)
+require(ggplot2)
+require(scales)
+```
 
-## 1. Data Processing
+## 2 Prepocessing the Data
+### 2.1 Downloading
+```{r, echo = TRUE, cache=TRUE}
+# download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv',
+#               'pml-training.csv', method="curl")
+# download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',
+#               'pml-testing.csv', method="curl")
 
-### 1.1 Loading Libraries
+rawTrainD <- read.table("pml-training.csv", sep=",", header = TRUE, na.strings=c("","NA","#DIV/0!"))
+rawTestD <- read.table("pml-testing.csv", sep=",", header = TRUE, na.strings=c("","NA","#DIV/0!"))
 
+```
+### 2.2 Exploring the Data
+Number of observations in the raw train set: **`r nrow(rawTrainD)`**
 
+```{r, echo = FALSE}
+ggplot(rawTrainD, aes(x=classe, y=(..count.. / sum(..count..)))) + 
+  geom_bar(stat="bin") +
+  scale_y_continuous(labels = percent) + 
+  ylab(NULL) + 
+  xlab("CLASSE values") + 
+  ggtitle("Frequency of CLASSE values")
+```
 
+### 2.3 Removing irrelevant predictors 
+```{r, echo = TRUE}
+#removing timestamp columns
+trainD <- rawTrainD[,c(-1,-3,-4,-5)]
+testD <- rawTestD[,c(-1,-3,-4,-5)]
 
+#selecting columns where NA values are less than 5%
+predictors <- colSums(is.na(trainD)) < (0.05 * nrow(trainD))
+trainD <- trainD[,predictors]
+testD <- testD[,predictors]
+testD$magnet_dumbbell_z <- as.numeric(testD$magnet_dumbbell_z)
+testD$magnet_forearm_y <- as.numeric(testD$magnet_forearm_y)
+testD$magnet_forearm_z <- as.numeric(testD$magnet_forearm_z)
+levels(testD$new_window) <- levels(trainD$new_window)
+```
 
+Number of columns in the raw train set: **`r ncol(rawTrainD)`**
 
+Number of columns (predictors) that will be used for training: **`r ncol(trainD)`**
+
+## 3 Training a Random Forest Predicting Model
+
+### 3.1 Slicing the Data
+```{r, echo = TRUE, cache=TRUE}
+set.seed(1234)
+inTrain <- createDataPartition(y = trainD$classe, p = 0.7, list = FALSE)
+training <- trainD[inTrain, ]
+validation <- trainD[-inTrain, ]
+```
+### 3.2 Training the model
+The Random Forest method has been selected, which is able to work with a very large number of predictors, even when there are more predictors than observations.
+```{r, echo = TRUE, cache=TRUE}
+set.seed(4321)
+model <- randomForest(classe ~ ., data = training)
+model
+```
+### 3.3 Analysing Variable Importance
+```{r, echo = TRUE, cache=TRUE}
+varImpPlot(model)
+```
 
